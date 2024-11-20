@@ -1,5 +1,5 @@
 import _ from "lodash";
-import React, { Component } from "react";
+import React, { Component, useState } from "react";
 import cn from "classnames";
 import { Input, InputNumber, Select } from "antd";
 import MaskedInput from "react-input-mask";
@@ -12,40 +12,64 @@ import * as styles from "./styles.css";
 const { TextArea } = Input;
 const { Option, OptGroup } = Select;
 
-class CodeEditor extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      value: ""
-    };
-  }
+// class CodeEditor extends Component {
+//   constructor(props) {
+//     super(props);
+//     this.state = {
+//       value: ""
+//     };
+//   }
 
-  onChange = e => {
-    const value = e.target.value;
-    this.setState({ value });
-    this.props.onChange && this.props.onChange(value);
+//   onChange = e => {
+//     const value = e.target.value;
+//     this.setState({ value });
+//     this.props.onChange && this.props.onChange(value);
+//   };
+
+//   onBlur = () => {
+//     this.props.onBlur && this.props.onBlur(this.state.value);
+//   };
+
+//   render() {
+//     const { className, style } = this.props;
+//     const { value } = this.state;
+
+//     return (
+//       <TextArea
+//         rows={4}
+//         ref={this.props.inputRef}
+//         value={value}
+//         onChange={this.onChange}
+//         onBlur={this.onBlur}
+//         className={className}
+//         style={style}
+//       />
+//     );
+//   }
+// }
+
+
+const CodeEditor = (props) => {
+  const [value, setValue] = useState("");
+  const { onChange, onBlur, inputRef, className, style } = props;
+
+  onChangeHandler = e => {
+    const newValue = e.target.value;
+    setValue(newValue);
+    onChange?.(value);
   };
 
-  onBlur = () => {
-    this.props.onBlur && this.props.onBlur(this.state.value);
-  };
-
-  render() {
-    const { className, style } = this.props;
-    const { value } = this.state;
-
-    return (
-      <TextArea
-        rows={4}
-        ref={this.props.inputRef}
-        value={value}
-        onChange={this.onChange}
-        onBlur={this.onBlur}
-        className={className}
-        style={style}
-      />
-    );
-  }
+  return (
+    <TextArea
+      rows={4}
+      ref={inputRef}
+      value={value}
+      onChange={onChangeHandler}
+      onBlur={onBlur}
+      className={className}
+      style={style}
+    />
+  );
 }
 
 class TextInputWithActions extends Component {
