@@ -384,54 +384,51 @@ const TextInputWithActions = ({
   );
 }
 
-class UniversalInput extends Component {
-  state = {
-    shouldProcess: false
+const UniversalInput = ({
+  onChange,
+  updateProcess,
+  eventable,
+  actions,
+  onEndEditing,
+  t,
+  ...props
+}) => {
+  const [shouldProcess, setShouldProcess] = useState(false);
+
+  const onChangeHandler = (value) => {
+    onChange?.(value);
+    eventable && setShouldProcess(true);
   };
 
-  onChange = value => {
-    this.props.onChange && this.props.onChange(value);
-    this.props.eventable && this.setState({ shouldProcess: true });
+  const onEndEditingHandler = (value) => {
+    onEndEditing?.(value);
+    setShouldProcess(false);
   };
 
-  onEndEditing = value => {
-    this.props.onEndEditing && this.props.onEndEditing(value);
-    this.setState({ shouldProcess: false });
-  };
+  const inProcess = updateProcess?.get("inProcess");
 
-  render() {
-    const {
-      updateProcess,
-      eventable,
-      actions,
-      onEndEditing,
-      t,
-      ...props
-    } = this.props;
-    let { shouldProcess } = this.state;
-    const inProcess = updateProcess && updateProcess.get("inProcess");
+  const newActions = [...(actions || [])];
 
-    const newActions = [...(actions || [])];
-    if (shouldProcess || inProcess) {
-      newActions.push(
-        <span
-          className={cn(styles.actionIcon, {
-            [styles.actionIconGray]: inProcess
-          })}
-          title={inProcess ? "" : "ready to send"}
-        >
-        </span>
-      );
-    }
-    return (
-      <TextInputWithActions
-        {...props}
-        onEndEditing={this.onEndEditing}
-        onChange={this.onChange}
-        actions={newActions}
-      />
+  if (shouldProcess || inProcess) {
+    newActions.push(
+      <span
+        className={cn(styles.actionIcon, {
+          [styles.actionIconGray]: inProcess
+        })}
+        title={inProcess ? "" : "ready to send"}
+      >
+      </span>
     );
   }
+
+  return (
+    <TextInputWithActions
+      {...props}
+      onEndEditing={onEndEditingHandler}
+      onChange={onChangeHandler}
+      actions={newActions}
+    />
+  );
 }
 
 export default UniversalInput
