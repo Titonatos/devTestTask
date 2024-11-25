@@ -1,5 +1,5 @@
 import _ from "lodash";
-import React, { Component, useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import cn from "classnames";
 import { Input, InputNumber, Select } from "antd";
 import MaskedInput from "react-input-mask";
@@ -16,7 +16,7 @@ const CodeEditor = (props) => {
   const [value, setValue] = useState("");
   const { onChange, onBlur, inputRef, className, style } = props;
 
-  onChangeHandler = e => {
+  onChangeHandler = (e) => {
     const newValue = e.target.value;
     setValue(newValue);
     onChange?.(value);
@@ -68,46 +68,67 @@ const TextInputWithActions = ({
   const [actionsWidth, setActionsWidth] = useState(0);
   const [inputValue, setInputValue] = useState(value);
   const [oldValue, setOldValue] = useState("");
-  
+
   const inputRef = useRef(null);
   const actionsNodeRef = useRef(null);
 
-  const onChangeDebounce = () => _.debounce(onchange, 200);
+  const onChangeDebounce = useCallback(_.debounce((onChange), 200), [onChange]);
 
   const recalcActionsWidth = () => {
     if (actionsNodeRef.current) {
-      setActionsWidth(actionsNodeRef.current.clientWidth);    
+      setActionsWidth(actionsNodeRef.current.clientWidth);
     }
   }
-  
+
   const setFocus = () => {
     autoFocus && inputRef.current.focus();
   };
+
+    useEffect(() => {
+      setFocus();
+    }, [])
 
   useEffect(() => {
     recalcActionsWidth();
   }, [actionsNodeRef.current]);
 
   useEffect(() => {
-    setFocus();
-  }, [])
+    setInputValue(value);
+  }, [value])
 
-  const onChangeHandler = (e) => {
-    const newValue = e.target.value;
-    setInputValue(newValue);
-    onChangeDebounce(newValue);
-  };
-
-  const onChangeNumber = (newValue) => {
-    const resultValue = prepareNumber?.(newValue) || newValue;
-    setInputValue(resultValue);
-    onChangeDebounce(newValue);
-  };
-  
   const setValue = (newValue) => {
     setInputValue(newValue);
     onChangeDebounce(newValue);
   }
+
+  const onChangeHandler = (e) => {
+    const newValue = e.target.value;
+    setValue(newValue);
+  };
+
+  const onChangeNumber = (newValue) => {
+    const preparedValue = prepareNumber?.(newValue) || (newValue || newValue === 0 ? newValue : "" );
+    setValue(preparedValue);
+  };
+
+  const onChangeMasked = e => {
+    const newValue = e.target.value;
+    const resultValue = (newValue === mask.replace(/[^-]/g, "_")) ? "" : newValue;
+    
+    setValue(resultValue);
+  };
+
+  const setBlur = (newValue) => {
+      setInputValue(newValue);
+      onChangeDebounce.cancel();
+      onChange?.(newValue);
+  
+      if (newValue !== oldValue) {
+        onEndEditing?.(newValue);
+      }
+  
+      setOldValue(newValue);
+    };
 
   const onBlur = (e) => {
     if (readOnly) {
@@ -118,20 +139,8 @@ const TextInputWithActions = ({
     setBlur(newValue);
   };
 
-  const onBlurSelect = (e) => {
+  const onBlurSelect = (_e) => {
     !readOnly && setBlur(inputValue);
-  };
-
-  const setBlur = (newValue) => {
-    setInputValue(newValue);
-    onChangeDebounce.cancel();
-    onChange?.(newValue);
-
-    if (newValue !== oldValue) {
-      onEndEditing?.(newValue);
-    }
-
-    setOldValue(newValue);
   };
 
   const onBlurNumber = (e) => {
@@ -159,13 +168,6 @@ const TextInputWithActions = ({
       document.execCommand("insertText", false, "\t");
       return false;
     }
-  };
-
-  const onChangeMasked = e => {
-    const newValue = e.target.value;
-    const resultValue = (newValue === mask.replace(/[^-]/g, "_")) ? "" : newValue;
-    
-    setInputValue(resultValue);
   };
 
   const getPlaceHolderMask = (mask) => {
@@ -212,9 +214,9 @@ const TextInputWithActions = ({
   mask = mask && maskIsValid(mask) ? mask : undefined;
 
   const finalValue = value || value === 0 ? value : "";
-  
+
   const textInputContainer = type === "number" ? "" : styles.textInputContainer;
-  
+
   const containerCN = cn(wrapperClassName, textInputContainer, {
     [styles.inputMask]: !multiline && !!mask
   });
@@ -241,9 +243,8 @@ const TextInputWithActions = ({
     keyDownHandler,
     style: inputStyle,
     className: inputCN,
-  }
-  
-  
+  };
+
   let control;
   if (type === "number") {
     if (readOnly) {
@@ -256,6 +257,7 @@ const TextInputWithActions = ({
       control = (
         <InputNumber
           {...commonProps}
+          value={inputValue}
           onChange={onChangeNumber}
           style={style}
           onBlur={onBlurNumber}
@@ -266,9 +268,9 @@ const TextInputWithActions = ({
   else if (mask) {
     control = (
       <MaskedInput
+      {...commonProps}
         formatChars={formatCharsInput}
         mask={mask}
-        {...commonProps}
         placeholder={getPlaceHolderMask(mask)}
         value={inputValue}
         onChange={onChangeMasked}

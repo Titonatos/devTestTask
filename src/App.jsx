@@ -1,24 +1,53 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 import UniversalInput from "./UniversalInput";
 
 const App = () => {
-  const [firstValue, setFirstValue] = useState("");
-  const [secondValue, setSecondValue] = useState("");
-  const [thirdValue, setThirdValue] = useState("");
-  const [fourValue, setFourValue] = useState("");
-  const [fiveValue, setFiveValue] = useState("");
+  const [firstValue, setFirstValue] = useState(localStorage.getItem('firstValue') || "");
+  const [secondValue, setSecondValue] = useState(localStorage.getItem('secondValue') || "");
+  const [thirdValue, setThirdValue] = useState(localStorage.getItem('thirdValue') || "");
+  const [fourValue, setFourValue] = useState(localStorage.getItem('fourValue') || "");
+  const [fiveValue, setFiveValue] = useState(localStorage.getItem('fiveValue') || "");
+
+  const updateValue = (name, setValueFunc) => (newValue) => {
+    setValueFunc(newValue);
+    localStorage.setItem(name, newValue);
+  };
+
+  const handleStorageChange = (event) => {
+    switch (event.key) {
+      case 'firstValue':
+        setFirstValue(event.newValue);
+        break;
+      case 'secondValue':
+        setSecondValue(event.newValue);
+        break;
+      case 'thirdValue':
+        setThirdValue(event.newValue);
+        break;
+      case 'fourValue':
+        setFourValue(event.newValue);
+        break;
+      case 'fiveValue':
+        setFiveValue(event.newValue);
+        break;
+      default:
+          break;
+  }};
+
+  window.addEventListener('storage', handleStorageChange);
 
   return (
     <div className="main">
       <h1 className="title">THIS IS NOT A TEST TASK</h1>
       <div className="inputItems">
+        
         <UniversalInput
           type="number"
           disabled={false}
           value={firstValue}
-          onChange={(e) => setFirstValue(e?.target?.value)}
+          onChange={updateValue('firstValue', setFirstValue)}
           placeholder="Number type"
           style={{ width: "100%" }}
           className="inputItem"
@@ -26,7 +55,7 @@ const App = () => {
         <UniversalInput
           disabled={false}
           value={secondValue}
-          onChange={(e) => setSecondValue(e?.target?.value)}
+          onChange={updateValue('secondValue', setSecondValue)}
           placeholder="Text type"
           style={{ width: "100%" }}
           className="inputItem"
@@ -35,7 +64,7 @@ const App = () => {
           multiline={true}
           disabled={false}
           value={thirdValue}
-          onChange={(e) => setThirdValue(e?.target?.value)}
+          onChange={updateValue('thirdValue', setThirdValue)}
           placeholder="Text multiline type"
           style={{ width: "100%" }}
           className="inputItem"
@@ -43,7 +72,7 @@ const App = () => {
         <UniversalInput
           disabled={false}
           value={fourValue}
-          onChange={(e) => setFourValue(e?.target?.value)}
+          onChange={updateValue('fourValue', setFourValue)}
           mask={"111-111"}
           placeholder="With mask"
           style={{
@@ -57,7 +86,7 @@ const App = () => {
         <UniversalInput
           disabled={false}
           value={fiveValue}
-          onChange={(e) => setFiveValue(e?.target?.value)}
+          onChange={updateValue('fiveValue', setFiveValue)}
           options={[
             { value: "first element", label: "first element" },
             { value: "second element", label: "second element" },
